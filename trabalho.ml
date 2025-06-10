@@ -8,8 +8,8 @@ type tipo =
     TyInt 
   | TyBool
   | TyFn of tipo * tipo
-      (*| Ref T*)
-      (*| Unit*)           
+  | TyRef of tipo
+  | TyUnit           
 
 type expr = 
     Num of int
@@ -26,6 +26,9 @@ type expr =
   | New of expr
   | Void of expr
   | While of bool * expr
+  | List of expr
+  | Read of unit 
+  | Print of expr
 
   
 (*=========== TYPEINFER ===================*)           
@@ -37,6 +40,8 @@ type value =
   | VBool of bool
   | VClos of string * expr * runEnv
   | VRecClos of string * string * expr * runEnv
+  | VUnit of expr
+  | VLocation of expr
                   
 and runEnv =  (string * value) list
     
@@ -99,6 +104,15 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
       let g' = (x,t)::g in
       let t2 = typeinfer g' e2 in
       if t1=t then t2 else raise (TypeError msg_letconflito)
+          
+          (*fazer*)
+  | Fat (e1) -> raise BugParser
+  | New (e1) -> raise BugParser
+  | Void (e1) -> raise BugParser
+  | While (e1,e2) -> raise BugParser
+  | List (e1) -> raise BugParser
+  | Read (e1) -> raise BugParser
+  | Print (e1) -> raise BugParser
       
                         
   | _ -> raise BugParser 
@@ -172,15 +186,18 @@ let rec eval (env: runEnv) (e:expr) : value =
   
   | LetRec(f,TyFn(tin,tout), Fn(x,tx,e1), e2) ->  
       eval ((f, VRecClos(f,x,e1,env)) :: env)   e2
+        
+        (*fazer*)
+  | Fat (e1) -> raise BugParser
+  | New (e1) -> raise BugParser
+  | Void (e1) -> raise BugParser
+  | While (e1,e2) -> raise BugParser
+  | List (e1) -> raise BugParser
+  | Read (e1) -> raise BugParser
+  | Print (e1) -> raise BugParser
       
   | _ -> raise BugParser
             
-
- 
-
-           
-
-                       
 
 (*===== INTEPRETADOR ========================*)
 
@@ -192,12 +209,16 @@ let rec strofvalue (v:value) : string =
   | VBool b -> string_of_bool b
   | VClos _ ->  "fun"
   | VRecClos _ -> "fun"
+  | VUnit _ -> "fun"
+  | VLocation _ -> "fun"
     
 let rec stroftipo (t:tipo) : string = 
   match t with
   | TyInt -> "int"
   | TyBool -> "bool"
   | TyFn(t1,t2) -> (stroftipo t1) ^ "-->" ^ (stroftipo t2)
+  | TyUnit -> "unit"
+  | TyRef(t1) -> (stroftipo t1)
     
     
   
