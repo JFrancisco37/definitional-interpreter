@@ -1,3 +1,7 @@
+(* This is an OCaml editor.
+   Enter your program here and send it to the toplevel using the "Eval code"
+   button or [Ctrl-e]. *)
+
 (*no minimo sum e lt*)
 type bop = Sum | Atrb | Sub | Mul | Div 
          | Eq | Gt | Lt | Neq
@@ -24,10 +28,11 @@ type expr =
   | LetRec of string * tipo * expr * expr
   | Fat of expr
   | New of expr
-  | Void of expr
+  | Unit
   | While of bool * expr
-  | List of expr
-  | Read of unit 
+  | Deref of expr
+  | Seq of expr * expr
+  | Read
   | Print of expr
 
   
@@ -82,8 +87,8 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
            if (t1=TyInt) && (t2=TyInt) then TyBool else raise (TypeError msg_relacionais)
        | And | Or -> 
            if (t1=TyBool) && (t2=TyBool) then TyBool else raise (TypeError msg_booleanos)
-       |Atrb ->
-           if (t1=TyBool) && (t2=TyBool) then TyBool else (if(t1=TyInt) && (t2=TyInt) then TyInt else raise (TypeError msg_booleanos)))
+       |Atrb -> 
+           if (t1=TyRef(TyBool)) && (t2=TyBool) then TyUnit else raise (TypeError msg_booleanos))
 
   
   | If(e1,e2,e3) ->  
@@ -108,10 +113,10 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
           (*fazer*)
   | Fat (e1) -> raise BugParser
   | New (e1) -> raise BugParser
-  | Void (e1) -> raise BugParser
+  | Unit -> raise BugParser
   | While (e1,e2) -> raise BugParser
-  | List (e1) -> raise BugParser
-  | Read (e1) -> raise BugParser
+  | Seq (e1,e2) -> raise BugParser
+  | Read -> raise BugParser
   | Print (e1) -> raise BugParser
       
                         
@@ -190,10 +195,10 @@ let rec eval (env: runEnv) (e:expr) : value =
         (*fazer*)
   | Fat (e1) -> raise BugParser
   | New (e1) -> raise BugParser
-  | Void (e1) -> raise BugParser
+  | Unit  -> raise BugParser
   | While (e1,e2) -> raise BugParser
-  | List (e1) -> raise BugParser
-  | Read (e1) -> raise BugParser
+  | Seq (e1,e2) -> raise BugParser
+  | Read -> raise BugParser
   | Print (e1) -> raise BugParser
       
   | _ -> raise BugParser
