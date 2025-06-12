@@ -1,7 +1,3 @@
-(* This is an OCaml editor.
-   Enter your program here and send it to the toplevel using the "Eval code"
-   button or [Ctrl-e]. *)
-
 (*no minimo sum e lt*)
 type bop = Sum | Atrb | Sub | Mul | Div 
          | Eq | Gt | Lt | Neq
