@@ -1,5 +1,5 @@
 (*no minimo sum e lt*)
-type bop = Sum | Atrb | Sub | Mul | Div 
+type bop = Sum | Sub | Mul | Div 
          | Eq | Gt | Lt | Neq
          | And | Or
 
@@ -22,12 +22,12 @@ type expr =
              (*| Atrib of expr * expr*)
              (*| App of expr * expr*)
   | LetRec of string * tipo * expr * expr
-  | Fat of expr
   | New of expr
   | Unit
   | While of bool * expr
   | Deref of expr
   | Seq of expr * expr
+  | Atrb of expr * expr
   | Read
   | Print of expr
 
@@ -82,9 +82,7 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
        | Eq | Gt | Lt | Neq ->
            if (t1=TyInt) && (t2=TyInt) then TyBool else raise (TypeError msg_relacionais)
        | And | Or -> 
-           if (t1=TyBool) && (t2=TyBool) then TyBool else raise (TypeError msg_booleanos)
-       |Atrb -> 
-           if (t1=TyRef(TyBool)) && (t2=TyBool) then TyUnit else raise (TypeError msg_booleanos))
+           if (t1=TyBool) && (t2=TyBool) then TyBool else raise (TypeError msg_booleanos))
 
   
   | If(e1,e2,e3) ->  
@@ -106,8 +104,7 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
       let t2 = typeinfer g' e2 in
       if t1=t then t2 else raise (TypeError msg_letconflito)
           
-          (*fazer*)
-  | Fat (e1) -> raise BugParser
+          (*fazer*) 
   | New (e1) -> raise BugParser
   | Unit -> raise BugParser
   | While (e1,e2) -> raise BugParser
@@ -181,17 +178,17 @@ let rec eval (env: runEnv) (e:expr) : value =
       let v2 = eval env e2 in
       (match eval env e1  with 
        | VClos      (x,e,env') -> eval ((x,v2) :: env') e
-       | VRecClos (f,x,e,env') -> eval ((f,VRecClos(f,x,e,env'))::(x,v2) :: env') e 
-       | _ -> raise BugTypeInfer)*)
+| VRecClos (f,x,e,env') -> eval ((f,VRecClos(f,x,e,env'))::(x,v2) :: env') e 
+| _ -> raise BugTypeInfer)*)
 
   
   | LetRec(f,TyFn(tin,tout), Fn(x,tx,e1), e2) ->  
       eval ((f, VRecClos(f,x,e1,env)) :: env)   e2
         
-        (*fazer*)
-  | Fat (e1) -> raise BugParser
+        (*fazer*) 
   | New (e1) -> raise BugParser
   | Unit  -> raise BugParser
+  | Atrb(e1,e2) -> raise BugParser
   | While (e1,e2) -> raise BugParser
   | Seq (e1,e2) -> raise BugParser
   | Read -> raise BugParser
@@ -304,4 +301,5 @@ let ys1 = Binop(Sub, Id "y", Num 1)     (* y - 1  *)
 let testes = [tst1;(*tst2;*)tst3;tst4;tst5;(*tst6*)]
              
 let runtests =  List.map inter testes
-    
+
+
