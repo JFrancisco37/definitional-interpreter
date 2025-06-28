@@ -357,3 +357,100 @@ let for_test =
 let () =
  inter "Fatorial com while" fat_test [5];
  inter "Soma e contagem com for" for_test []
+
+
+ (* ============== TESTES COMPLETOS PARA L2 ============== *)
+
+let arit_rel_test =
+ Let("x", TyInt, Num 10,
+  Let("y", TyInt, Num 5,
+   Seq(
+    Print(Binop(Sum, Id "x", Id "y")),        (* 15 *)
+    Seq(Print(Binop(Sub, Id "x", Id "y")),    (* 5 *)
+    Seq(Print(Binop(Mul, Id "x", Id "y")),    (* 50 *)
+    Seq(Print(Binop(Div, Id "x", Id "y")),    (* 2 *)
+    Seq(
+     If(Binop(Lt, Id "x", Id "y"), Print(Num 1), Print(Num 0)),    (* false = 0 *)
+     If(Binop(Leq, Id "x", Id "y"), Print(Num 1), Print(Num 0))    (* false = 0 *)
+    )))))
+  )
+ )
+
+let if_test =
+ Let("x", TyInt, Num 3,
+  If(Binop(Lt, Id "x", Num 5),
+     Print(Num 1),
+     Print(Num 0)
+  )
+ )
+
+let ref_test =
+ Let("x", TyRef TyInt, New (Num 10),
+  Seq(
+   Atrib(Id "x", Binop(Sum, Deref(Id "x"), Num 5)),
+   Print(Deref(Id "x"))  (* 15 *)
+  )
+ )
+
+let seq_test =
+ Seq(
+  Print(Num 1),
+  Seq(
+   Print(Num 2),
+   Print(Num 3)
+  )
+ )
+
+let while_test =
+ Let("x", TyRef TyInt, New (Num 0),
+  While(Binop(Lt, Deref(Id "x"), Num 3),
+   Seq(
+    Print(Deref(Id "x")),
+    Atrib(Id "x", Binop(Sum, Deref(Id "x"), Num 1))
+   )
+  )
+ )
+
+let for_test2 =
+ Let("acc", TyRef TyInt, New (Num 0),
+  Seq(
+   For("i", Num 1, Num 3,
+    Seq(
+     Print(Id "i"),  (* 1 2 3 *)
+     Atrib(Id "acc", Binop(Sum, Deref(Id "acc"), Id "i"))
+    )
+   ),
+   Print(Deref(Id "acc"))  (* 6 *)
+  )
+ )
+
+let read_test =
+ Let("a", TyInt, Read,
+  Print(Id "a")
+ )
+
+let print_test =
+ Print(Binop(Mul, Num 4, Num 2)) (* 8 *)
+
+let logic_test =
+ Seq(
+  If(Binop(Eq, Num 3, Num 3), Print(Num 1), Print(Num 0)),     (* 1 *)
+  Seq(
+   If(Binop(Neq, Num 3, Num 4), Print(Num 1), Print(Num 0)),   (* 1 *)
+   Seq(
+    If(Binop(And, Bool true, Bool false), Print(Num 1), Print(Num 0)),  (* 0 *)
+    If(Binop(Or, Bool true, Bool false), Print(Num 1), Print(Num 0))    (* 1 *)
+   )
+  )
+ )
+
+let () =
+ inter "1. Operações aritméticas e relacionais" arit_rel_test [];
+ inter "2. If com booleano" if_test [];
+ inter "3. Referências, atribuição e derreferência" ref_test [];
+ inter "4. Sequência com unit" seq_test [];
+ inter "5. Laço while simples" while_test [];
+ inter "6. Laço for de 1 a 3 com soma" for_test2 [];
+ inter "7. Leitura com read" read_test [42];
+ inter "8. Print com expressão" print_test [];
+ inter "9. Operadores lógicos e igualdade" logic_test [];
