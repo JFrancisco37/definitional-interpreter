@@ -176,7 +176,7 @@ let compute (o:bop) (v1:expr) (v2:expr) : expr =
   | (Or, Bool b1, Bool b2) -> Bool (b1 || b2)
   | _ -> raise NoRuleApplies
 
-let rec step (e:expr, s:state) : (expr * state) =
+let rec step (e:expr) (s:state) : (expr * state) =
   match e with
   (* NOVO: Regra de dessalinização para o for *)
   | For(i, e_start, e_end, e_body) ->
