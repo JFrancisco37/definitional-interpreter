@@ -24,7 +24,7 @@ type expr =
   | LetRec of string * tipo * expr * expr
   | New of expr
   | Unit
-  | While of bool * expr
+  | While of expr * expr
   | Deref of expr
   | Seq of expr * expr
   | Atrb of expr * expr
@@ -45,13 +45,28 @@ type value =
   | VLocation of expr
                   
 and runEnv =  (string * value) list
+
+type mem = (value * value) list
     
 let rec lookup env x = 
   match env with 
     [] -> None
   | (y,t):: tail -> if x=y then Some t else lookup tail x
           
+let rec update a k i =
+  (k,i) :: a          
+
+let rec assign m i v =
+  match m with
+    [] -> None (*qlqr coisa so retornar a memoria*)
+  | (i_mem,v_mem) :: tl -> if (i=i_mem) then Some ((i, v) :: m) else assign tl i v 
           
+let rec len lst =
+  match lst with
+  | [] -> 0 
+  | _ :: tl -> 1 + len tl
+
+(* exceções que não devem ocorrer  *)
            
 exception TypeError of string
     
@@ -64,7 +79,10 @@ let msg_idndeclarado = "identificador não declarado"
 let msg_letconflito = "expressão associada a um id deve ter o tipo declarado" 
 let msg_tipoarg = "argumento deve ser do tipo esperado pela função "
 let msg_funesperada = "lado esquerdo de aplicação deve ser do tipo função" 
-let msg_letrec =    "funcao recursiva deve se do tipo declarado"
+let msg_letrec =    "funcao recursiva deve se do tipo declarado" 
+let msg_while_e2 =    "e2 do while não é do tipo unit" 
+let msg_while_e1 =    "condição do while não é do tipo boolean" 
+let msg_seq =    "e1 não é do tipo unit em Seq" 
   
 exception BugParser 
   
@@ -107,8 +125,17 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
           (*fazer*) 
   | New (e1) -> raise BugParser
   | Unit -> raise BugParser
-  | While (e1,e2) -> raise BugParser
-  | Seq (e1,e2) -> raise BugParser
+  | While (e1,e2) -> 
+      (match typeinfer g e1 with
+         TyBool ->
+           (match typeinfer g e2 with
+              TyUnit -> TyUnit 
+            | _ -> raise(TypeError msg_while_e2))
+       | _ -> raise(TypeError msg_while_e1))
+  | Seq (e1,e2) -> 
+      (match typeinfer g e1 with
+         TyUnit -> typeinfer g e2
+       | _ -> raise(TypeError msg_seq)) 
   | Read -> raise BugParser
   | Print (e1) -> raise BugParser
       
@@ -277,8 +304,8 @@ let tst5 = Let("x", TyInt, Binop(Sum, Id "x", Num 10),
 sem açucar sintático:
 
   let rec pow: int -> (int -> int) = 
-    fn x:int => fn y:int => if y = 0 then 1 else x * (pow x (y-1))  
-  in (pow 3) 4 
+fn x:int => fn y:int => if y = 0 then 1 else x * (pow x (y-1))  
+in (pow 3) 4 
 
 *)          
 
