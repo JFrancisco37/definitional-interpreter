@@ -1,6 +1,4 @@
-(* ============== DEFINIÇÕES DE TIPOS E DADOS ============== *)
 
-(* NOVO: Adicionado Leq para o for loop *)
 type bop = Sum | Sub | Mul | Div | Eq | Gt | Lt | Leq | Neq | And | Or
 
 type tipo =
@@ -9,7 +7,6 @@ type tipo =
  | TyRef of tipo
  | TyUnit
 
-(* NOVO: Adicionado o construtor For *)
 type expr =
  | Num of int
  | Bool of bool
@@ -42,7 +39,6 @@ exception BugParser of string
 exception NoRuleApplies
 exception DivZero
 
-(* ============== VERIFICADOR DE TIPOS (TYPEINFER) ============== *)
 
 let rec lookup (g:tyEnv) (x:string) : tipo option =
  match g with
@@ -67,7 +63,6 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
     Sum | Sub | Mul | Div ->
      if (t1 = TyInt) && (t2 = TyInt) then TyInt
      else raise (TypeError "Operandos de operações aritméticas devem ser inteiros")
-   (* NOVO: Regra de tipo para Leq *)
    | Eq | Gt | Lt | Leq | Neq ->
      if (t1 = TyInt) && (t2 = TyInt) then TyBool
      else raise (TypeError "Operandos de operações relacionais devem ser inteiros")
@@ -118,7 +113,6 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
    if t2 <> TyUnit then raise (TypeError "O corpo do while deve ter tipo unit");
    TyUnit
 
- (* NOVO: Regra de tipo para o for *)
  | For(i, e_start, e_end, e_body) ->
    if typeinfer g e_start <> TyInt then
     raise (TypeError "Valor inicial do for deve ser int.");
@@ -136,7 +130,6 @@ let rec typeinfer (g:tyEnv) (e:expr) : tipo =
    else raise (TypeError "Print espera uma expressão do tipo int")
 
 
-(* ============== AVALIADOR SMALL-STEP ============== *)
 
 let is_value (e:expr) : bool =
  match e with
@@ -160,7 +153,6 @@ let rec subs (v:expr) (x:string) (e:expr) : expr =
  | For(j, e1, e2, e3) -> if x=j then e else For(j, subs v x e1, subs v x e2, subs v x e3)
  | _ -> e
 
-(* NOVO: Adicionado Leq *)
 let compute (o:bop) (v1:expr) (v2:expr) : expr =
  match (o, v1, v2) with
  | (Sum, Num n1, Num n2) -> Num (n1 + n2)
@@ -176,10 +168,8 @@ let compute (o:bop) (v1:expr) (v2:expr) : expr =
  | (Or, Bool b1, Bool b2) -> Bool (b1 || b2)
  | _ -> raise NoRuleApplies
 
-(* CORRIGIDO: A função agora aceita uma tupla como argumento *)
 let rec step ((e, s): expr * state) : (expr * state) =
  match e with
- (* NOVO: Regra de dessalinização para o for *)
  | For(i, e_start, e_end, e_body) ->
    let counter_id = "_counter_" ^ i in
    let end_id = "_end_" ^ i in
@@ -251,18 +241,15 @@ let rec step ((e, s): expr * state) : (expr * state) =
 
  | _ -> raise NoRuleApplies
 
-(* CORRIGIDO: A função agora aceita uma tupla como argumento *)
 let rec eval ((e, s): expr * state) : (expr * state) =
  if is_value e then (e, s)
  else
   try
    let (e', s') = step (e, s) in
-   (* A chamada recursiva agora está correta pois a definição de eval foi corrigida *)
    eval (e', s')
   with e -> raise e (* Apenas para garantir que exceções não sejam engolidas *)
 
 
-(* ============== INTERPRETADOR PRINCIPAL E TESTES ============== *)
 
 let rec strofvalue (v:expr) : string =
  match v with
@@ -311,9 +298,7 @@ let inter (name: string) (e:expr) (i:int list) : unit =
  | NoRuleApplies -> print_endline ("\nERRO DE EXECUÇÃO (BUG): Nenhuma regra de avaliação se aplica.")
 
 
-(* ============== TESTES ============== *)
 
-(* Teste Fatorial com 'while' (original) *)
 let fat_test =
  Let("x", TyInt, Read,
   Let("z", TyRef TyInt, New (Id "x"),
@@ -332,15 +317,7 @@ let fat_test =
   )
  )
 
-(* NOVO: Teste com o laço 'for' *)
-(*
- let sum: ref int = new 0 in
- for i = 1 to 5 do (
-  sum := !sum + i;
-  print(i)
- );
- print(!sum)
-*)
+
 let for_test =
  Let("sum", TyRef TyInt, New (Num 0),
   Seq(
@@ -359,7 +336,6 @@ let () =
  inter "Soma e contagem com for" for_test []
 
 
- (* ============== TESTES COMPLETOS PARA L2 ============== *)
 
 let arit_rel_test =
  Let("x", TyInt, Num 10,
